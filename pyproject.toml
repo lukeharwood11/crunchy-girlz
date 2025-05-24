@@ -1,0 +1,13 @@
+[project]
+name = "crunchy-girlz"
+version = "0.1.0"
+description = "Crunchy Girlz web application"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+]
+
+[project.scripts]
+dev-api = "uvicorn api.main:app --reload --host 0.0.0.0 --port 8000"

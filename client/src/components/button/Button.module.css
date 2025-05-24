@@ -1,0 +1,144 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  outline: none;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--primary-green);
+  outline-offset: 2px;
+}
+
+/* Variants */
+.primary {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #3d7d3d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.secondary {
+  background-color: var(--primary-pink);
+  color: #d14d6a;
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #ffb0bb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.secondary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text {
+  background-color: transparent;
+  color: var(--primary-green);
+  padding: 0;
+  box-shadow: none;
+}
+
+.text:hover:not(:disabled) {
+  color: #3d7d3d;
+  text-decoration: underline;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Sizes */
+.small {
+  padding: 6px 12px;
+  font-size: 14px;
+  min-height: 32px;
+}
+
+.medium {
+  padding: 8px 16px;
+  font-size: 16px;
+  min-height: 40px;
+}
+
+.large {
+  padding: 12px 24px;
+  font-size: 18px;
+  min-height: 48px;
+}
+
+/* States */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Loading state */
+.loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.secondary .spinner {
+  border-color: rgba(209, 77, 106, 0.3);
+  border-top-color: #d14d6a;
+}
+
+@keyframes spin {
+  to {
+    transform: translateX(-50%) rotate(360deg);
+  }
+}
+
+/* Icon positioning */
+.leftIcon {
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.rightIcon {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+/* Hide content when loading */
+.loading .content {
+  visibility: hidden;
+} 

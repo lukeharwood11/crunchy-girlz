@@ -1,0 +1,12 @@
+---
+description: 
+globs: *.tsx,*.css,*.ts
+alwaysApply: false
+---
+# React Code
+
+When writing react code, first look in the components directory to reuse components. If something can be reusable, split up a component into reusable pieces. Always examine file structure before writing.
+
+For CSS, we use vanilla css which should accompany the file in which they are being applied (i.e. login.page.tsx should have a login.page.module.css), do NOT use tailwind or any other css library.
+
+Don't use magic colors, use the ones in [style.css](mdc:client/src/style.css).

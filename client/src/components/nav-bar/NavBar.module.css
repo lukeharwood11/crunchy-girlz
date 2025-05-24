@@ -1,0 +1,65 @@
+.navbar {
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.navContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.profileButton {
+  color: #333;
+}
+
+.signOutButton {
+  margin-left: 0;
+}
+
+.logoC {
+  color: var(--primary-pink);
+}
+
+.logoG {
+  color: var(--primary-pink);
+}
+
+@media screen and (max-width: 360px) {
+  .navContent {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .actions {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .logo {
+    justify-content: center;
+  }
+}

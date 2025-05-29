@@ -1,4 +1,5 @@
-import { MdPerson } from 'react-icons/md';
+import React from 'react';
+import { MdLogout, MdPerson } from 'react-icons/md';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../button/Button';
 import styles from './NavBar.module.css';
@@ -9,30 +10,40 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav className={styles.navbar}>
-      <div className={styles.navContent}>
+    <header className={styles.header}>
+      <div className={styles.headerContent}>
         <div className={styles.logo}>
-            <h1><span className={styles.logoC}>C</span><span className={styles.logoG}>G</span></h1>
+          <img 
+            src="/icon.svg" 
+            alt="Crunchy Girlz" 
+            className={styles.logoIcon}
+            onError={(e) => {
+              console.error('Failed to load icon:', e);
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+          <h1>Crunchy Girlz</h1>
         </div>
         <div className={styles.actions}>
           <Button
-            variant="text"
-            size="medium"
+            variant="primary"
+            size="small"
             leftIcon={<MdPerson size={24} />}
             className={styles.profileButton}>
               Profile
           </Button>
           <Button
-            variant="secondary"
-            size="medium"
+            variant="secondary-subtle"
+            size="small"
             onClick={handleSignOut}
             className={styles.signOutButton}
+            leftIcon={<MdLogout size={24} />}
           >
             Sign Out
           </Button>
         </div>
       </div>
-    </nav>
+    </header>
   );
 };
 

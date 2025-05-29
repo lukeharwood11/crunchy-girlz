@@ -4,11 +4,13 @@ import LoginPage from './pages/login-page/login.page';
 import SignUpPage from './pages/signup-page/signup.page';
 import HomePage from './pages/home-page/home.page';
 import AuthWrapper from './AuthWrapper';
+import NotFoundPage from './pages/not-found-page/not-found.page';
 
 const routes = {
   home: '/',
   login: '/login',
-  signup: '/signup'
+  signup: '/signup',
+  notFound: '*'
 };
 
 const App: React.FC = () => {
@@ -20,7 +22,8 @@ const App: React.FC = () => {
           <Route path={""} element={<AuthWrapper />}>
             <Route index element={<HomePage />} />
           </Route>
-        </Routes>
+          <Route path={routes.notFound} element={<NotFoundPage />} />
+        </Routes> 
     </BrowserRouter>
   );
 };

@@ -1,0 +1,124 @@
+.notFoundPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--grey-100);
+}
+
+.container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px;
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: var(--border-radius-standard);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.sadIcon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1.5rem;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.title {
+  color: var(--primary-green);
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  margin-top: 0;
+}
+
+.message {
+  color: var(--grey-600);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  margin-top: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.linkButton {
+  text-decoration: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .content {
+    padding: 2rem 1.5rem;
+  }
+  
+  .sadIcon {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .message {
+    font-size: 1rem;
+  }
+  
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .linkButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 1.5rem 1rem;
+  }
+  
+  .sadIcon {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .message {
+    font-size: 0.95rem;
+  }
+}

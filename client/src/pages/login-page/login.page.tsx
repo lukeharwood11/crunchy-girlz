@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import Button from '../../components/button/Button';
+import { Input, InputGroup } from '../../components/input';
+import { ErrorMessage } from '../../components/error-message';
+import { GoogleIcon, Icon, Logo } from '../../components/icons';
 import styles from './login.page.module.css';
 
 const LoginPage = () => {
@@ -44,52 +48,60 @@ const LoginPage = () => {
     return (
         <div className={styles.container}>
             <div className={styles.loginBox}>
-                <h1>Welcome Back</h1>
+                <div className={styles.header}>
+                    <Icon size={40} />
+                    <h1>Welcome Back!</h1>
+                </div>
                 <form onSubmit={handleLogin} className={styles.form}>
-                    {error && <div className={styles.error}>{error}</div>}
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="email">Email</label>
-                        <input
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                    
+                    <InputGroup label="Email" htmlFor="email" required>
+                        <Input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             placeholder="Enter your email"
+                            fullWidth
                         />
-                    </div>
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="password">Password</label>
-                        <input
+                    </InputGroup>
+
+                    <InputGroup label="Password" htmlFor="password" required>
+                        <Input
                             id="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             placeholder="Enter your password"
+                            fullWidth
                         />
-                    </div>
-                    <button 
+                    </InputGroup>
+
+                    <Button 
                         type="submit" 
-                        className={styles.submitButton}
-                        disabled={loading}
+                        variant="primary"
+                        fullWidth
+                        isLoading={loading}
                     >
-                        {loading ? 'Logging in...' : 'Login'}
-                    </button>
+                        Login
+                    </Button>
                 </form>
 
                 <div className={styles.divider}>
                     <span>or</span>
                 </div>
 
-                <button 
+                <Button 
                     onClick={handleGoogleLogin}
-                    className={styles.googleButton}
+                    variant="secondary-subtle"
+                    fullWidth
                     disabled={loading}
+                    leftIcon={<GoogleIcon size={18} />}
                 >
-                    <img src="/google-icon.svg" alt="Google" className={styles.googleIcon} />
                     Sign in with Google
-                </button>
+                </Button>
 
                 <p className={styles.signupLink}>
                     Don't have an account? <Link to="/signup">Create one</Link>

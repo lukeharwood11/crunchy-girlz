@@ -3,20 +3,27 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: var(--grey-100);
     padding: 1rem;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .loginBox {
     background: white;
     padding: 2rem;
-    border-radius: 12px;
+    border-radius: var(--border-radius-standard);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
 }
 
-.loginBox h1 {
+.loginBox {
     color: var(--primary-green);
     margin-bottom: 1.5rem;
     text-align: center;
@@ -93,12 +100,12 @@
 .divider::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--grey-300);
 }
 
 .divider span {
     padding: 0 1rem;
-    color: #718096;
+    color: var(--grey-600);
     font-size: 0.9rem;
 }
 
@@ -134,7 +141,7 @@
 .signupLink {
     text-align: center;
     margin-top: 1.5rem;
-    color: #4a5568;
+    color: var(--grey-600);
     font-size: 0.9rem;
 }
 

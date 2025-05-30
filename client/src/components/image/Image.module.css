@@ -1,0 +1,118 @@
+.container {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--grey-200);
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+  height: 100%;
+}
+
+.image:hover {
+  border-color: var(--grey-300);
+}
+
+.loading {
+  opacity: 0;
+}
+
+.skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--grey-200) 25%,
+    var(--grey-100) 50%,
+    var(--grey-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: inherit;
+}
+
+.logoFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: var(--grey-100);
+  border: 1px solid var(--grey-200);
+  border-radius: inherit;
+}
+
+.logo {
+  max-width: 60%;
+  max-height: 60%;
+  opacity: 0.7;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Variants */
+.default {
+  border-radius: var(--border-radius-standard);
+}
+
+.rounded {
+  border-radius: var(--border-radius-standard);
+}
+
+.circle {
+  border-radius: var(--border-radius-full);
+  aspect-ratio: 1;
+}
+
+/* Sizes */
+.small {
+  width: 64px;
+  height: 64px;
+}
+
+.medium {
+  width: 128px;
+  height: 128px;
+}
+
+.large {
+  width: 256px;
+  height: 256px;
+}
+
+.xlarge {
+  width: 384px;
+  height: 384px;
+}
+
+/* Object fit options */
+.cover {
+  object-fit: cover;
+}
+
+.contain {
+  object-fit: contain;
+}
+
+.fill {
+  object-fit: fill;
+}
+
+.scale-down {
+  object-fit: scale-down;
+}

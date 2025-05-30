@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { supabase } from './supabaseClient';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -9,28 +10,13 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add request interceptor for authentication
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 // Add response interceptor for error handling
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem('token');
+      // Handle unauthorized access - sign out user
+      await supabase.auth.signOut();
       window.location.href = '/login';
     }
     return Promise.reject(error);

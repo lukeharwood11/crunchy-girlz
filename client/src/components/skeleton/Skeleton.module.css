@@ -1,0 +1,101 @@
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--grey-200) 25%,
+    var(--grey-100) 50%,
+    var(--grey-200) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--border-radius-standard);
+  display: block;
+}
+
+.skeleton.animate {
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Variants */
+.default {
+  border-radius: var(--border-radius-standard);
+}
+
+.rounded {
+  border-radius: var(--border-radius-standard);
+}
+
+.circle {
+  border-radius: var(--border-radius-full);
+  aspect-ratio: 1;
+}
+
+.text {
+  border-radius: 4px;
+  height: 1em;
+  margin-bottom: 0.5em;
+}
+
+.text:last-child {
+  margin-bottom: 0;
+}
+
+/* Sizes */
+.small {
+  width: 64px;
+  height: 64px;
+}
+
+.medium {
+  width: 128px;
+  height: 128px;
+}
+
+.large {
+  width: 256px;
+  height: 256px;
+}
+
+.xlarge {
+  width: 384px;
+  height: 384px;
+}
+
+/* Text variant specific sizes */
+.text.small {
+  height: 12px;
+  width: 100%;
+}
+
+.text.medium {
+  height: 16px;
+  width: 100%;
+}
+
+.text.large {
+  height: 20px;
+  width: 100%;
+}
+
+.text.xlarge {
+  height: 24px;
+  width: 100%;
+}
+
+/* Text container for multiple lines */
+.textContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.textLine {
+  margin-bottom: 0;
+}

@@ -1,13 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import NavBar from '../../components/nav-bar/NavBar';
 import Button from '../../components/button/Button';
 import styles from './not-found.page.module.css';
 
 const NotFoundPage: React.FC = () => {
   return (
     <div className={styles.notFoundPage}>
-      <NavBar />
       <div className={styles.container}>
         <div className={styles.content}>
           <img 

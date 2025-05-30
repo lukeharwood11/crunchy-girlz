@@ -1,0 +1,202 @@
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    box-sizing: border-box;
+}
+
+.profileHeader {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    padding: 2rem;
+}
+
+.avatarSection {
+    flex-shrink: 0;
+}
+
+.profileInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.name {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--grey-800);
+    line-height: 1.2;
+}
+
+.email {
+    margin: 0;
+    font-size: 1.125rem;
+    color: var(--grey-600);
+    font-weight: 400;
+}
+
+.memberSince {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--grey-600);
+    font-weight: 400;
+}
+
+@media (max-width: 768px) {
+    .profileHeader {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+    
+    .name {
+        font-size: 1.75rem;
+    }
+}
+
+.loading, .error {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.error {
+    color: var(--error);
+}
+
+.section {
+    margin-bottom: 2rem;
+    background: var(--background-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.section h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 0.5rem;
+}
+
+.info p {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.info strong {
+    color: var(--text-primary);
+    min-width: 120px;
+    display: inline-block;
+}
+
+.tokenContainer {
+    margin: 1rem 0;
+}
+
+.tokenContainer strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.tokenField {
+    width: 100%;
+    padding: 0.75rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    background: var(--background-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    resize: vertical;
+    color: var(--text-secondary);
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+.tokenField:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.json {
+    background: var(--background-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.apiActions {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.button {
+    padding: 0.75rem 1.5rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+.button:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button:last-child {
+    background: var(--error);
+}
+
+.button:last-child:hover {
+    background: var(--error-dark);
+}
+
+.apiActions .button {
+    background: var(--secondary);
+}
+
+.apiActions .button:hover {
+    background: var(--secondary-dark);
+}

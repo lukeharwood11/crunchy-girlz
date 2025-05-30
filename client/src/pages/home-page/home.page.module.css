@@ -1,0 +1,161 @@
+.homePage {
+  flex: 1;
+  background: linear-gradient(135deg, var(--light-green) 0%, var(--light-pink) 100%);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--dark-green);
+  margin: 0.5rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: var(--grey-600);
+  font-weight: 400;
+  margin: 0.5rem 0 1rem 0;
+}
+
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.menuCard {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+  background: white;
+  border-radius: var(--border-radius-standard);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.menuCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.menuCard.green {
+  border-top: 4px solid var(--primary-green);
+}
+
+.menuCard.green:hover {
+  background: var(--subtle-green);
+}
+
+.menuCard.pink {
+  border-top: 4px solid var(--primary-pink);
+}
+
+.menuCard.pink:hover {
+  background: var(--subtle-pink);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.iconContainer {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.green .iconContainer {
+  background: var(--accent-green);
+  color: var(--dark-green);
+}
+
+.pink .iconContainer {
+  background: var(--accent-pink);
+  color: var(--dark-pink);
+}
+
+.menuCard:hover .iconContainer {
+  transform: scale(1.1);
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--grey-800);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cardDescription {
+  font-size: 1rem;
+  color: var(--grey-600);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .homePage {
+    padding: 1rem 0.5rem;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+  }
+  
+  .menuGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2rem;
+  }
+  
+  .cardTitle {
+    font-size: 1.25rem;
+  }
+  
+  .iconContainer {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .iconContainer svg {
+    width: 36px;
+    height: 36px;
+  }
+}

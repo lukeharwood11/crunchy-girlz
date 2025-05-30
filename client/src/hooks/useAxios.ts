@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import axiosInstance from '../lib/axios';
+import { useAuth } from './useAuth';
 
 interface UseAxiosResponse<T> {
   data: T | null;
@@ -9,33 +10,55 @@ interface UseAxiosResponse<T> {
     method?: string;
     data?: any;
     params?: any;
-  }) => Promise<void>;
+    headers?: Record<string, string>;
+  }) => Promise<T | null>;
 }
 
 function useAxios<T = any>(): UseAxiosResponse<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const { accessToken } = useAuth();
 
   const execute = useCallback(async (url: string, options?: {
     method?: string;
     data?: any;
     params?: any;
-  }) => {
+    headers?: Record<string, string>;
+  }): Promise<T | null> => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Prepare headers with authentication
+      const headers = {
+        ...options?.headers,
+      };
+      
+      // Add authorization header if we have an access token
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+      
       const response = await axiosInstance({
         url,
-        ...options
+        method: options?.method || 'GET',
+        data: options?.data,
+        params: options?.params,
+        headers,
       });
-      setData(response.data as T);
+      
+      const responseData = response.data as T;
+      setData(responseData);
+      return responseData;
     } catch (err) {
-      setError(err as Error);
+      const errorObj = err as Error;
+      setError(errorObj);
+      return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [accessToken]);
 
   return { data, loading, error, execute };
 }

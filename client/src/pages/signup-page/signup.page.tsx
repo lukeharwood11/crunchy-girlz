@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import Button from '../../components/button/Button';
+import { Input, InputGroup } from '../../components/input';
+import { ErrorMessage } from '../../components/error-message';
 import styles from './signup.page.module.css';
 
 const SignUpPage = () => {
@@ -53,61 +56,67 @@ const SignUpPage = () => {
             <div className={styles.signupBox}>
                 <h1>Create Account</h1>
                 <form onSubmit={handleSignUp} className={styles.form}>
-                    {error && <div className={styles.error}>{error}</div>}
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="email">Email</label>
-                        <input
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                    
+                    <InputGroup label="Email" htmlFor="email" required>
+                        <Input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             placeholder="Enter your email"
+                            fullWidth
                         />
-                    </div>
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="password">Password</label>
-                        <input
+                    </InputGroup>
+
+                    <InputGroup label="Password" htmlFor="password" required>
+                        <Input
                             id="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             placeholder="Create a password"
+                            fullWidth
                         />
-                    </div>
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="confirmPassword">Confirm Password</label>
-                        <input
+                    </InputGroup>
+
+                    <InputGroup label="Confirm Password" htmlFor="confirmPassword" required>
+                        <Input
                             id="confirmPassword"
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                             placeholder="Confirm your password"
+                            fullWidth
                         />
-                    </div>
-                    <button 
+                    </InputGroup>
+
+                    <Button 
                         type="submit" 
-                        className={styles.submitButton}
-                        disabled={loading}
+                        variant="primary"
+                        fullWidth
+                        isLoading={loading}
                     >
-                        {loading ? 'Creating Account...' : 'Create Account'}
-                    </button>
+                        Create Account
+                    </Button>
                 </form>
 
                 <div className={styles.divider}>
                     <span>or</span>
                 </div>
 
-                <button 
+                <Button 
                     onClick={handleGoogleSignUp}
-                    className={styles.googleButton}
+                    variant="secondary-subtle"
+                    fullWidth
                     disabled={loading}
+                    leftIcon={<img src="/google-icon.svg" alt="Google" className={styles.googleIcon} />}
                 >
-                    <img src="/google-icon.svg" alt="Google" className={styles.googleIcon} />
                     Sign up with Google
-                </button>
+                </Button>
 
                 <p className={styles.loginLink}>
                     Already have an account? <Link to="/login">Sign in</Link>

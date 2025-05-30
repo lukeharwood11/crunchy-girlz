@@ -19,6 +19,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
 }
 
 .logo h1 {
@@ -39,6 +40,49 @@
   gap: 1rem;
 }
 
+/* Hamburger menu button - hidden by default, shown on mobile */
+.hamburgerButton {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--border-radius-standard);
+  color: var(--grey-600);
+  transition: background-color 0.2s ease;
+}
+
+.hamburgerButton:hover {
+  background-color: var(--grey-100);
+}
+
+/* Mobile menu popup */
+.mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--grey-200);
+  z-index: 999;
+}
+
+.mobileMenuContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mobileProfileButton,
+.mobileSignOutButton {
+  width: 100%;
+  justify-content: flex-start;
+}
+
 .logoC {
   color: var(--primary-pink);
 }
@@ -47,19 +91,30 @@
   color: var(--primary-pink);
 }
 
+/* Mobile breakpoint */
+@media screen and (max-width: 768px) {
+  /* Hide desktop actions, show hamburger button */
+  .actions {
+    display: none;
+  }
+  
+  .hamburgerButton {
+    display: block;
+  }
+}
+
+/* Very small screens - keep existing responsive behavior for logo */
 @media screen and (max-width: 360px) {
   .headerContent {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
+    padding: 0.75rem;
   }
-
-  .actions {
-    justify-content: center;
-    width: 100%;
+  
+  .logo h1 {
+    font-size: 1.25rem;
   }
-
-  .logo {
-    justify-content: center;
+  
+  .logoIcon {
+    width: 32px;
+    height: 32px;
   }
 }

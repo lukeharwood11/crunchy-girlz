@@ -211,7 +211,7 @@ async def delete_meal_plan(plan_id: int, user_id: str = Depends(get_current_user
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.get("/search/", response_model=SuccessResponse)
+@router.get("/search", response_model=SuccessResponse)
 async def search_meal_plans(
     q: str = Query(..., min_length=1),
     limit: int = Query(10, ge=1, le=100),

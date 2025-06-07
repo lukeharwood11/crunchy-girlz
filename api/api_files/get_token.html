@@ -96,8 +96,8 @@
         <div class="auth-section">
             <h3>Configuration</h3>
             <p>Enter your Supabase project details:</p>
-            <input type="text" id="supabaseUrl" placeholder="Supabase URL (e.g., https://xxxxx.supabase.co)">
-            <input type="text" id="supabaseKey" placeholder="Supabase Anon Key">
+            <input type="text" id="supabaseUrl" placeholder="Supabase URL (e.g., https://xxxxx.supabase.co)" value="{{ supabase_url or '' }}">
+            <input type="text" id="supabaseKey" placeholder="Supabase Anon Key" value="{{ supabase_anon_key or '' }}">
             <button onclick="initSupabase()">Initialize Supabase</button>
             <div id="initStatus"></div>
         </div>
@@ -298,6 +298,14 @@
 
         // Handle OAuth callback
         window.addEventListener('load', () => {
+            // Auto-initialize Supabase if values are provided
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (url && key) {
+                initSupabase();
+            }
+
             if (window.location.hash.includes('access_token')) {
                 // This means we're returning from OAuth
                 setTimeout(() => {

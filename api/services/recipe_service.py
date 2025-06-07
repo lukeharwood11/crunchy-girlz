@@ -7,8 +7,10 @@ from ..models.recipe import (
     RecipeUpdate,
     RecipeIngredientLink,
     RecipeIngredientLinkCreate,
+    RecipeIngredientLinkCreateWithObjects,
     RecipeIngredientLinkUpdate,
 )
+from ..services.ingredient_service import ingredient_service
 
 
 class RecipeService:
@@ -24,7 +26,7 @@ class RecipeService:
             data = recipe_data.model_dump(exclude_none=True)
             data["user_id"] = user_id
 
-            response = self.supabase.table(self.table_name).insert(data).execute()
+            response = self.supabase.schema(self.schema).table(self.table_name).insert(data).execute()
 
             if not response.data:
                 raise Exception("Failed to create recipe")
@@ -38,7 +40,7 @@ class RecipeService:
     ) -> Optional[Recipe]:
         """Get recipe by ID"""
         try:
-            query = self.supabase.table(self.table_name).select("*").eq("id", recipe_id)
+            query = self.supabase.schema(self.schema).table(self.table_name).select("*").eq("id", recipe_id)
 
             # If user_id is provided, ensure the recipe belongs to the user
             if user_id:
@@ -63,7 +65,7 @@ class RecipeService:
         """Get user's recipes with optional filtering"""
         try:
             query = (
-                self.supabase.table(self.table_name).select("*").eq("user_id", user_id)
+                self.supabase.schema(self.schema).table(self.table_name).select("*").eq("user_id", user_id)
             )
 
             if difficulty_level:
@@ -89,7 +91,7 @@ class RecipeService:
                 return await self.get_recipe(recipe_id, user_id)
 
             response = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .update(data)
                 .eq("id", recipe_id)
                 .eq("user_id", user_id)
@@ -107,7 +109,7 @@ class RecipeService:
         """Delete a recipe (only if owned by user)"""
         try:
             response = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .delete()
                 .eq("id", recipe_id)
                 .eq("user_id", user_id)
@@ -123,7 +125,7 @@ class RecipeService:
         """Search recipes by title"""
         try:
             supabase_query = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .select("*")
                 .text_search("title", query)
             )
@@ -146,7 +148,7 @@ class RecipeService:
             data = link_data.model_dump(exclude_none=True)
 
             response = (
-                self.supabase.table(self.ingredient_link_table).insert(data).execute()
+                self.supabase.schema(self.schema).table(self.ingredient_link_table).insert(data).execute()
             )
 
             if not response.data:
@@ -156,13 +158,41 @@ class RecipeService:
         except Exception as e:
             raise Exception(f"Failed to add ingredient to recipe: {str(e)}")
 
+    async def add_ingredient_to_recipe_with_objects(
+        self, link_data: RecipeIngredientLinkCreateWithObjects
+    ) -> RecipeIngredientLink:
+        """Add ingredient to recipe with full ingredient and unit objects"""
+        try:
+            # Upsert ingredient
+            ingredient = await ingredient_service.create_ingredient_with_unit(link_data.ingredient)
+            
+            # Upsert unit if provided
+            unit_id = None
+            if link_data.unit:
+                unit = await ingredient_service._upsert_unit(link_data.unit)
+                unit_id = unit
+            
+            # Create the recipe ingredient link
+            link_create_data = RecipeIngredientLinkCreate(
+                recipe_id=link_data.recipe_id,
+                ingredient_id=ingredient.id,
+                quantity=link_data.quantity,
+                unit_id=unit_id,
+                preparation=link_data.preparation,
+                notes=link_data.notes
+            )
+            
+            return await self.add_ingredient_to_recipe(link_create_data)
+        except Exception as e:
+            raise Exception(f"Failed to add ingredient to recipe with objects: {str(e)}")
+
     async def get_recipe_ingredients(
         self, recipe_id: int
     ) -> List[RecipeIngredientLink]:
         """Get all ingredients for a recipe"""
         try:
             response = (
-                self.supabase.table(self.ingredient_link_table)
+                self.supabase.schema(self.schema).table(self.ingredient_link_table)
                 .select("*")
                 .eq("recipe_id", recipe_id)
                 .execute()
@@ -182,7 +212,7 @@ class RecipeService:
                 return None
 
             response = (
-                self.supabase.table(self.ingredient_link_table)
+                self.supabase.schema(self.schema).table(self.ingredient_link_table)
                 .update(data)
                 .eq("id", link_id)
                 .execute()
@@ -199,7 +229,7 @@ class RecipeService:
         """Remove ingredient from recipe"""
         try:
             response = (
-                self.supabase.table(self.ingredient_link_table)
+                self.supabase.schema(self.schema).table(self.ingredient_link_table)
                 .delete()
                 .eq("id", link_id)
                 .execute()

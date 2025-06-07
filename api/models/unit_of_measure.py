@@ -33,6 +33,11 @@ class UnitOfMeasureCreate(UnitOfMeasureBase):
     pass
 
 
+class UnitOfMeasureCreateWithType(BaseModel):
+    name: str
+    type: Optional[UnitOfMeasureTypeCreate | UnitOfMeasureType] = None
+
+
 class UnitOfMeasureUpdate(BaseModel):
     name: Optional[str] = None
     type_id: Optional[int] = None

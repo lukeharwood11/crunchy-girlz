@@ -68,6 +68,15 @@ class MealPlanRecipeCreate(MealPlanRecipeBase):
     pass
 
 
+class MealPlanRecipeCreateWithObjects(BaseModel):
+    meal_plan_id: int
+    recipe: 'RecipeCreate'
+    day_of_plan: int
+    meal_type: MealTypeCreate | MealType
+    servings: Optional[int] = 1
+    notes: Optional[str] = None
+
+
 class MealPlanRecipeUpdate(BaseModel):
     day_of_plan: Optional[int] = None
     meal_type_id: Optional[int] = None
@@ -80,3 +89,10 @@ class MealPlanRecipe(MealPlanRecipeBase):
 
     class Config:
         from_attributes = True
+
+
+# Import here to avoid circular imports
+from .recipe import RecipeCreate
+
+# Update forward references
+MealPlanRecipeCreateWithObjects.model_rebuild()

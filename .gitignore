@@ -35,3 +35,11 @@ dist/
 Thumbs.db
 *storybook.log
 storybook-static
+
+# Supabase
+.temp/
+.branches/
+.migrations/
+.git/
+.env*
+volumes/

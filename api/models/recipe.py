@@ -54,6 +54,15 @@ class RecipeIngredientLinkCreate(RecipeIngredientLinkBase):
     pass
 
 
+class RecipeIngredientLinkCreateWithObjects(BaseModel):
+    recipe_id: int
+    ingredient: 'IngredientCreateWithUnit'
+    quantity: Decimal
+    unit: Optional['UnitOfMeasureCreateWithType'] = None
+    preparation: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class RecipeIngredientLinkUpdate(BaseModel):
     quantity: Optional[Decimal] = None
     unit_id: Optional[int] = None
@@ -66,3 +75,11 @@ class RecipeIngredientLink(RecipeIngredientLinkBase):
 
     class Config:
         from_attributes = True
+
+
+# Import here to avoid circular imports
+from .ingredient import IngredientCreateWithUnit
+from .unit_of_measure import UnitOfMeasureCreateWithType
+
+# Update forward references
+RecipeIngredientLinkCreateWithObjects.model_rebuild()

@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, Query
 from ...models.unit_of_measure import (
     UnitOfMeasure,
     UnitOfMeasureCreate,
+    UnitOfMeasureCreateWithType,
     UnitOfMeasureUpdate,
     UnitOfMeasureType,
     UnitOfMeasureTypeCreate,
@@ -121,6 +122,18 @@ async def create_unit(
     try:
         unit = await unit_service.create_unit(unit_data)
         return SuccessResponse(message="Unit created successfully", data=unit)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/with-type", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+async def create_unit_with_type(
+    unit_data: UnitOfMeasureCreateWithType, current_user: dict = Depends(get_current_user)
+):
+    """Create a new unit of measure with full type object (authenticated users only)"""
+    try:
+        unit = await unit_service.create_unit_with_type(unit_data)
+        return SuccessResponse(message="Unit created successfully with type", data=unit)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

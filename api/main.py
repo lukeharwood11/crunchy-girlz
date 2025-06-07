@@ -1,10 +1,17 @@
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
-from fastapi.security import HTTPBearer
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+from .settings.config import config
 from .routers.v1 import v1_router
 import api.settings.auth as auth
 from api.settings.config import config
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+log.info("Starting Crunchy Girlz API")
 
 app = FastAPI(
     title="Crunchy Girlz API",
@@ -43,23 +50,19 @@ def custom_openapi():
         }
     }
 
-    # Apply security to all protected endpoints (those with dependencies)
-    if "paths" in openapi_schema:
-        for path, methods in openapi_schema["paths"].items():
-            for method, details in methods.items():
-                # Apply security to all v1 API endpoints
-                if path.startswith("/api/v1"):
-                    if "security" not in details:
-                        details["security"] = [{"BearerAuth": []}]
+    # Apply BearerAuth security to protected endpoints
+    for path, path_item in openapi_schema["paths"].items():
+        # Check if this is a protected endpoint (starts with /api/v1/ and not auth/health)
+        if path.startswith("/api/v1/") and not any(unprotected in path for unprotected in ["/auth", "/health"]):
+            for method, operation in path_item.items():
+                if isinstance(operation, dict) and "operationId" in operation:
+                    operation["security"] = [{"BearerAuth": []}]
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
 
 app.openapi = custom_openapi
-
-protected_router = APIRouter()
-unprotected_router = APIRouter()
 
 # Add CORS middleware
 app.add_middleware(
@@ -70,39 +73,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routers
-protected_router.include_router(v1_router)
-
-app.include_router(unprotected_router)
-app.include_router(
-    protected_router,
-    dependencies=[Depends(auth.verify_jwt)],
-    # This adds the security requirement to all endpoints in the protected router
-    responses={
-        401: {"description": "Unauthorized - Invalid or missing JWT token"},
-        403: {"description": "Forbidden - Token valid but insufficient permissions"},
-    },
-)
-
+app.include_router(v1_router)
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to Crunchy Girlz API"}
 
+auth_templates = Jinja2Templates(directory="api/api_files")
+# static serve api_files/get_token.html
+@app.get("/auth")
+async def get_token(request: Request):
+    return auth_templates.TemplateResponse(
+        "get_token.html", 
+        {
+            "request": request,
+            "supabase_url": config.SUPABASE_URL,
+            "supabase_anon_key": config.SUPABASE_ANON_KEY
+        }
+    )
 
-@app.get("/auth/callback")
-async def auth_callback():
-    """Handle OAuth callback and show token extraction instructions"""
-    return {
-        "message": "OAuth callback received",
-        "instructions": [
-            "1. Check your browser's URL for the access_token parameter",
-            "2. Copy the value after 'access_token='",
-            "3. Go back to /docs and click 'Authorize'",
-            "4. Paste the token in the BearerAuth field",
-            "5. Now you can test protected endpoints!",
-        ],
-    }
 
 
 @app.get("/health")

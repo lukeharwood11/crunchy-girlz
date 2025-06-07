@@ -1,21 +1,126 @@
 from typing import List, Optional
 from supabase import Client
 from ..settings.database import get_supabase_client
-from ..models.ingredient import Ingredient, IngredientCreate, IngredientUpdate
+from ..models.ingredient import Ingredient, IngredientCreate, IngredientUpdate, IngredientCreateWithUnit
+from ..models.unit_of_measure import UnitOfMeasure, UnitOfMeasureCreate, UnitOfMeasureCreateWithType, UnitOfMeasureType, UnitOfMeasureTypeCreate
 
 
 class IngredientService:
     def __init__(self):
         self.supabase: Client = get_supabase_client()
         self.table_name = "ingredient"
+        self.unit_table_name = "unit_of_measure"
+        self.unit_type_table_name = "unit_of_measure_type"
         self.schema = "core"
+
+    async def _upsert_unit_type(self, unit_type_data: UnitOfMeasureTypeCreate | UnitOfMeasureType) -> int:
+        """Upsert a unit type and return its ID"""
+        try:
+            if isinstance(unit_type_data, UnitOfMeasureType):
+                return unit_type_data.id
+            
+            data = unit_type_data.model_dump(exclude_none=True)
+            # Check if unit type already exists by name
+            existing = (
+                self.supabase.schema(self.schema).table(self.unit_type_table_name)
+                .select("id")
+                .eq("name", data["name"])
+                .execute()
+            )
+            
+            if existing.data:
+                return existing.data[0]["id"]
+            
+            # Create new unit type
+            response = (
+                self.supabase.schema(self.schema).table(self.unit_type_table_name)
+                .insert(data)
+                .execute()
+            )
+            
+            if not response.data:
+                raise Exception("Failed to create unit type")
+            
+            return response.data[0]["id"]
+        except Exception as e:
+            raise Exception(f"Failed to upsert unit type: {str(e)}")
+
+    async def _upsert_unit(self, unit_data: UnitOfMeasureCreate | UnitOfMeasureCreateWithType | UnitOfMeasure) -> int:
+        """Upsert a unit and return its ID"""
+        try:
+            if isinstance(unit_data, UnitOfMeasure):
+                return unit_data.id
+            
+            type_id = None
+            if isinstance(unit_data, UnitOfMeasureCreateWithType) and unit_data.type:
+                type_id = await self._upsert_unit_type(unit_data.type)
+            elif hasattr(unit_data, 'type_id') and unit_data.type_id:
+                type_id = unit_data.type_id
+            
+            # Check if unit already exists by name and type
+            query = (
+                self.supabase.schema(self.schema).table(self.unit_table_name)
+                .select("id")
+                .eq("name", unit_data.name)
+            )
+            
+            if type_id:
+                query = query.eq("type_id", type_id)
+            else:
+                query = query.is_("type_id", "null")
+            
+            existing = query.execute()
+            
+            if existing.data:
+                return existing.data[0]["id"]
+            
+            # Create new unit
+            data = {"name": unit_data.name}
+            if type_id:
+                data["type_id"] = type_id
+            
+            response = (
+                self.supabase.schema(self.schema).table(self.unit_table_name)
+                .insert(data)
+                .execute()
+            )
+            
+            if not response.data:
+                raise Exception("Failed to create unit")
+            
+            return response.data[0]["id"]
+        except Exception as e:
+            raise Exception(f"Failed to upsert unit: {str(e)}")
+
+    async def create_ingredient_with_unit(self, ingredient_data: IngredientCreateWithUnit) -> Ingredient:
+        """Create a new ingredient with optional unit upsert"""
+        try:
+            unit_id = None
+            if ingredient_data.unit:
+                unit_id = await self._upsert_unit(ingredient_data.unit)
+            
+            # Create ingredient
+            data = {
+                "name": ingredient_data.name,
+                "category": ingredient_data.category,
+                "unit_id": unit_id
+            }
+            
+            response = self.supabase.schema(self.schema).table(self.table_name).insert(data).execute()
+
+            if not response.data:
+                raise Exception("Failed to create ingredient")
+
+            return Ingredient(**response.data[0])
+        except Exception as e:
+            raise Exception(f"Failed to create ingredient with unit: {str(e)}")
 
     async def create_ingredient(self, ingredient_data: IngredientCreate) -> Ingredient:
         """Create a new ingredient"""
         try:
             data = ingredient_data.model_dump(exclude_none=True)
 
-            response = self.supabase.table(self.table_name).insert(data).execute()
+            response = self.supabase.schema(self.schema).table(self.table_name).insert(data).execute()
 
             if not response.data:
                 raise Exception("Failed to create ingredient")
@@ -23,12 +128,13 @@ class IngredientService:
             return Ingredient(**response.data[0])
         except Exception as e:
             raise Exception(f"Failed to create ingredient: {str(e)}")
+            raise e
 
     async def get_ingredient(self, ingredient_id: int) -> Optional[Ingredient]:
         """Get ingredient by ID"""
         try:
             response = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .select("*")
                 .eq("id", ingredient_id)
                 .execute()
@@ -46,7 +152,7 @@ class IngredientService:
     ) -> List[Ingredient]:
         """Get all ingredients with optional filtering"""
         try:
-            query = self.supabase.table(self.table_name).select("*")
+            query = self.supabase.schema(self.schema).table(self.table_name).select("*")
 
             if category:
                 query = query.eq("category", category)
@@ -67,7 +173,7 @@ class IngredientService:
                 return await self.get_ingredient(ingredient_id)
 
             response = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .update(data)
                 .eq("id", ingredient_id)
                 .execute()
@@ -84,7 +190,7 @@ class IngredientService:
         """Delete an ingredient"""
         try:
             response = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .delete()
                 .eq("id", ingredient_id)
                 .execute()
@@ -97,7 +203,7 @@ class IngredientService:
         """Search ingredients by name using text search"""
         try:
             response = (
-                self.supabase.table(self.table_name)
+                self.supabase.schema(self.schema).table(self.table_name)
                 .select("*")
                 .text_search("name", query)
                 .limit(limit)

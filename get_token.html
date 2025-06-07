@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Supabase JWT Token</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .auth-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .google-btn {
+            background: #db4437;
+        }
+        .google-btn:hover {
+            background: #c23321;
+        }
+        .token-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .copy-btn {
+            background: #007bff;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Get JWT Token for FastAPI Docs</h1>
+        <p>Use this page to authenticate and get your JWT token, then paste it into the FastAPI docs "Authorize" button.</p>
+
+        <!-- Configuration Section -->
+        <div class="auth-section">
+            <h3>Configuration</h3>
+            <p>Enter your Supabase project details:</p>
+            <input type="text" id="supabaseUrl" placeholder="Supabase URL (e.g., https://xxxxx.supabase.co)">
+            <input type="text" id="supabaseKey" placeholder="Supabase Anon Key">
+            <button onclick="initSupabase()">Initialize Supabase</button>
+            <div id="initStatus"></div>
+        </div>
+
+        <!-- OAuth Login Section -->
+        <div class="auth-section">
+            <h3>OAuth Login</h3>
+            <button class="google-btn" onclick="signInWithGoogle()">Sign In with Google</button>
+            <p><em>Note: Make sure Google OAuth is configured in your Supabase project.</em></p>
+        </div>
+
+        <!-- Email/Password Login Section -->
+        <div class="auth-section">
+            <h3>Email/Password Login</h3>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="signInWithPassword()">Sign In</button>
+            <button onclick="signUp()">Sign Up</button>
+        </div>
+
+        <!-- Token Display Section -->
+        <div class="auth-section">
+            <h3>JWT Token</h3>
+            <div id="tokenDisplay" class="token-display">No token yet. Please sign in first.</div>
+            <button class="copy-btn" onclick="copyToken()">Copy Token</button>
+            <button onclick="signOut()">Sign Out</button>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status"></div>
+
+        <!-- Instructions -->
+        <div class="auth-section">
+            <h3>How to Use</h3>
+            <ol>
+                <li>Configure your Supabase project details above</li>
+                <li>Sign in using Google OAuth or email/password</li>
+                <li>Copy the JWT token that appears</li>
+                <li>Go to your FastAPI docs (http://localhost:8000/docs)</li>
+                <li>Click the "Authorize" button</li>
+                <li>Paste the token (without "Bearer " prefix)</li>
+                <li>Now you can test protected endpoints!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let supabase = null;
+        let currentToken = null;
+
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${isError ? 'error' : 'success'}">${message}</div>`;
+            setTimeout(() => statusDiv.innerHTML = '', 5000);
+        }
+
+        function initSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+
+            if (!url || !key) {
+                showStatus('Please enter both Supabase URL and Anon Key', true);
+                return;
+            }
+
+            try {
+                supabase = window.supabase.createClient(url, key);
+                document.getElementById('initStatus').innerHTML = '<div class="success">Supabase initialized successfully!</div>';
+                
+                // Check if user is already logged in
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (session) {
+                        displayToken(session.access_token);
+                        showStatus('Already logged in!');
+                    }
+                });
+            } catch (error) {
+                showStatus('Failed to initialize Supabase: ' + error.message, true);
+            }
+        }
+
+        async function signInWithGoogle() {
+            if (!supabase) {
+                showStatus('Please initialize Supabase first', true);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+
+                if (error) throw error;
+                showStatus('Redirecting to Google...');
+            } catch (error) {
+                showStatus('Google OAuth error: ' + error.message, true);
+            }
+        }
+
+        async function signInWithPassword() {
+            if (!supabase) {
+                showStatus('Please initialize Supabase first', true);
+                return;
+            }
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('Please enter both email and password', true);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                displayToken(data.session.access_token);
+                showStatus('Signed in successfully!');
+            } catch (error) {
+                showStatus('Sign in error: ' + error.message, true);
+            }
+        }
+
+        async function signUp() {
+            if (!supabase) {
+                showStatus('Please initialize Supabase first', true);
+                return;
+            }
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('Please enter both email and password', true);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                if (data.session) {
+                    displayToken(data.session.access_token);
+                    showStatus('Signed up and logged in successfully!');
+                } else {
+                    showStatus('Sign up successful! Please check your email for confirmation.');
+                }
+            } catch (error) {
+                showStatus('Sign up error: ' + error.message, true);
+            }
+        }
+
+        async function signOut() {
+            if (!supabase) return;
+
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+
+                currentToken = null;
+                document.getElementById('tokenDisplay').textContent = 'No token yet. Please sign in first.';
+                showStatus('Signed out successfully!');
+            } catch (error) {
+                showStatus('Sign out error: ' + error.message, true);
+            }
+        }
+
+        function displayToken(token) {
+            currentToken = token;
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            tokenDisplay.textContent = token;
+        }
+
+        function copyToken() {
+            if (!currentToken) {
+                showStatus('No token to copy', true);
+                return;
+            }
+
+            navigator.clipboard.writeText(currentToken).then(() => {
+                showStatus('Token copied to clipboard!');
+            }).catch(() => {
+                showStatus('Failed to copy token', true);
+            });
+        }
+
+        // Handle OAuth callback
+        window.addEventListener('load', () => {
+            if (window.location.hash.includes('access_token')) {
+                // This means we're returning from OAuth
+                setTimeout(() => {
+                    if (supabase) {
+                        supabase.auth.getSession().then(({ data: { session } }) => {
+                            if (session) {
+                                displayToken(session.access_token);
+                                showStatus('OAuth login successful!');
+                            }
+                        });
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html> 

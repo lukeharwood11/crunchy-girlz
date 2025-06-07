@@ -116,7 +116,7 @@ async def delete_meal_type(
 
 
 # Meal Plan endpoints
-@router.post("/", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
 async def create_meal_plan(
     plan_data: MealPlanCreate, user_id: str = Depends(get_current_user_id)
 ):
@@ -150,7 +150,7 @@ async def get_meal_plan(plan_id: int, user_id: str = Depends(get_current_user_id
         )
 
 
-@router.get("/", response_model=SuccessResponse)
+@router.get("", response_model=SuccessResponse)
 async def get_meal_plans(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),

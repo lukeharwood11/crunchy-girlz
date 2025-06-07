@@ -15,3 +15,4 @@ def get_supabase_admin_client() -> Client:
 
 # Default client instance
 supabase: Client = get_supabase_client()
+supabase_admin: Client = get_supabase_admin_client()

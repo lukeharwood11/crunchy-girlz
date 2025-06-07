@@ -4,7 +4,6 @@ from ..settings.database import get_supabase_client
 from ..models.unit_of_measure import (
     UnitOfMeasure,
     UnitOfMeasureCreate,
-    UnitOfMeasureCreateWithType,
     UnitOfMeasureUpdate,
     UnitOfMeasureType,
     UnitOfMeasureTypeCreate,
@@ -145,25 +144,21 @@ class UnitOfMeasureService:
 
     # Unit of Measure methods
     async def create_unit(self, unit_data: UnitOfMeasureCreate) -> UnitOfMeasure:
-        """Create a new unit of measure"""
-        try:
-            data = unit_data.model_dump(exclude_none=True)
-
-            response = self.supabase.schema(self.schema).table(self.table_name).insert(data).execute()
-
-            if not response.data:
-                raise Exception("Failed to create unit of measure")
-
-            return UnitOfMeasure(**response.data[0])
-        except Exception as e:
-            raise Exception(f"Failed to create unit of measure: {str(e)}")
-
-    async def create_unit_with_type(self, unit_data: UnitOfMeasureCreateWithType) -> UnitOfMeasure:
-        """Create a new unit of measure with optional type upsert"""
+        """Create a new unit of measure with validation and upsert functionality"""
         try:
             type_id = None
-            if unit_data.type:
+            
+            # Validate type: must have either type_id or type object
+            if unit_data.type_id and unit_data.type:
+                raise Exception("Cannot provide both type_id and type object")
+            
+            if unit_data.type_id:
+                # Use provided type_id directly
+                type_id = unit_data.type_id
+            elif unit_data.type:
+                # Upsert type from object
                 type_id = await self._upsert_unit_type(unit_data.type)
+            # If neither is provided, type_id remains None (allowed for units without types)
             
             # Create unit
             data = {
@@ -178,7 +173,7 @@ class UnitOfMeasureService:
 
             return UnitOfMeasure(**response.data[0])
         except Exception as e:
-            raise Exception(f"Failed to create unit with type: {str(e)}")
+            raise Exception(f"Failed to create unit of measure: {str(e)}")
 
     # Alias for backwards compatibility
     async def create_unit_of_measure(self, unit_data: UnitOfMeasureCreate) -> UnitOfMeasure:

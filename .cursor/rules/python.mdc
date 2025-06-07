@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When writing python, use `list`, `dict` and | types instead of using the `typing` module with optionals if possible.

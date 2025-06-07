@@ -6,7 +6,6 @@ from ...models.recipe import (
     RecipeUpdate,
     RecipeIngredientLink,
     RecipeIngredientLinkCreate,
-    RecipeIngredientLinkCreateWithObjects,
     RecipeIngredientLinkUpdate,
 )
 from ...services.recipe_service import recipe_service
@@ -140,7 +139,13 @@ async def add_ingredient_to_recipe(
     ingredient_data: RecipeIngredientLinkCreate,
     user_id: str = Depends(get_current_user_id),
 ):
-    """Add ingredient to recipe (authenticated users only)"""
+    """Add ingredient to recipe (authenticated users only)
+    
+    Supports both approaches:
+    - Using IDs: ingredient_id and unit_id
+    - Using objects: ingredient and unit objects
+    - Or a combination of both
+    """
     try:
         # Verify recipe ownership
         recipe = await recipe_service.get_recipe(recipe_id, user_id)
@@ -156,39 +161,6 @@ async def add_ingredient_to_recipe(
         ingredient_link = await recipe_service.add_ingredient_to_recipe(ingredient_data)
         return SuccessResponse(
             message="Ingredient added to recipe successfully", data=ingredient_link
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-@router.post(
-    "/{recipe_id}/ingredients/with-objects",
-    response_model=SuccessResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def add_ingredient_to_recipe_with_objects(
-    recipe_id: int,
-    ingredient_data: RecipeIngredientLinkCreateWithObjects,
-    user_id: str = Depends(get_current_user_id),
-):
-    """Add ingredient to recipe with full ingredient and unit objects (authenticated users only)"""
-    try:
-        # Verify recipe ownership
-        recipe = await recipe_service.get_recipe(recipe_id, user_id)
-        if not recipe:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Recipe not found or you don't have permission to modify it",
-            )
-
-        # Ensure recipe_id matches
-        ingredient_data.recipe_id = recipe_id
-
-        ingredient_link = await recipe_service.add_ingredient_to_recipe_with_objects(ingredient_data)
-        return SuccessResponse(
-            message="Ingredient added to recipe successfully with objects", data=ingredient_link
         )
     except HTTPException:
         raise

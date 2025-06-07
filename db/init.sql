@@ -3,6 +3,17 @@
 
 CREATE SCHEMA IF NOT EXISTS core;
 
+-- DROP all tables in the core schema
+DROP TABLE IF EXISTS core.recipe_ingredient_link CASCADE;
+DROP TABLE IF EXISTS core.recipe_instruction CASCADE;
+DROP TABLE IF EXISTS core.recipe CASCADE;
+DROP TABLE IF EXISTS core.ingredient CASCADE;
+DROP TABLE IF EXISTS core.unit_of_measure CASCADE;
+DROP TABLE IF EXISTS core.unit_of_measure_type CASCADE;
+DROP TABLE IF EXISTS core.meal_plan_recipes CASCADE;
+DROP TABLE IF EXISTS core.meal_plan CASCADE;
+DROP TABLE IF EXISTS core.meal_type CASCADE;
+
 -- Enable pgvector extension for vector similarity search
 CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -28,7 +39,6 @@ CREATE TABLE IF NOT EXISTS core.ingredient (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(100),
-    unit_id INTEGER REFERENCES core.unit_of_measure(id) ON DELETE CASCADE,
     name_embedding vector(2000),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,7 +50,6 @@ CREATE TABLE IF NOT EXISTS core.recipe (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    instructions TEXT NOT NULL,
     prep_time_minutes INTEGER,
     cook_time_minutes INTEGER,
     servings INTEGER,
@@ -48,6 +57,18 @@ CREATE TABLE IF NOT EXISTS core.recipe (
     title_embedding vector(2000),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Recipe instructions table (depends on recipe)
+CREATE TABLE IF NOT EXISTS core.recipe_instruction (
+    id BIGSERIAL PRIMARY KEY,
+    recipe_id INTEGER REFERENCES core.recipe(id) ON DELETE CASCADE,
+    step INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    type VARCHAR(20) NOT NULL DEFAULT 'instruction', -- 'instruction' or 'note'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(recipe_id, step)
 );
 
 -- Recipe ingredients junction table (depends on recipe and ingredient)
@@ -97,6 +118,8 @@ CREATE TABLE IF NOT EXISTS core.meal_plan_recipes (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_recipe_user_id ON core.recipe(user_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_instruction_recipe_id ON core.recipe_instruction(recipe_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_instruction_step ON core.recipe_instruction(recipe_id, step);
 CREATE INDEX IF NOT EXISTS idx_recipe_ingredient_link_recipe_id ON core.recipe_ingredient_link(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_recipe_ingredient_link_ingredient_id ON core.recipe_ingredient_link(ingredient_id);
 CREATE INDEX IF NOT EXISTS idx_meal_plan_user_id ON core.meal_plan(user_id);

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status, Depends, Query
-from ...models.ingredient import Ingredient, IngredientCreate, IngredientUpdate, IngredientCreateWithUnit
+from ...models.ingredient import Ingredient, IngredientCreate, IngredientUpdate
 from ...services.ingredient_service import ingredient_service
 from ...settings.auth import get_current_user, get_optional_user
 from ...contracts import SuccessResponse, ErrorResponse
@@ -12,22 +12,14 @@ router = APIRouter(prefix="/ingredients", tags=["ingredients"])
 async def create_ingredient(
     ingredient_data: IngredientCreate, current_user: dict = Depends(get_current_user)
 ):
-    """Create a new ingredient (authenticated users only)"""
-    ingredient = await ingredient_service.create_ingredient(ingredient_data)
-    return SuccessResponse(
-        message="Ingredient created successfully", data=ingredient
-    )
-
-
-@router.post("/with-unit", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
-async def create_ingredient_with_unit(
-    ingredient_data: IngredientCreateWithUnit, current_user: dict = Depends(get_current_user)
-):
-    """Create a new ingredient with full unit object (authenticated users only)"""
-    ingredient = await ingredient_service.create_ingredient_with_unit(ingredient_data)
-    return SuccessResponse(
-        message="Ingredient created successfully with unit", data=ingredient
-    )
+    """Create a new ingredient with upsert functionality (authenticated users only)"""
+    try:
+        ingredient = await ingredient_service.create_ingredient(ingredient_data)
+        return SuccessResponse(
+            message="Ingredient created successfully", data=ingredient
+        )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/{ingredient_id}", response_model=SuccessResponse)
@@ -53,7 +45,7 @@ async def get_ingredient(
         )
 
 
-@router.get("/", response_model=SuccessResponse)
+@router.get("", response_model=SuccessResponse)
 async def get_ingredients(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),

@@ -1,4 +1,4 @@
-from typing import List, Optional
+
 from supabase import Client
 from ..settings.database import get_supabase_client
 from ..models.recipe import (
@@ -7,7 +7,6 @@ from ..models.recipe import (
     RecipeUpdate,
     RecipeIngredientLink,
     RecipeIngredientLinkCreate,
-    RecipeIngredientLinkCreateWithObjects,
     RecipeIngredientLinkUpdate,
 )
 from ..services.ingredient_service import ingredient_service
@@ -36,8 +35,8 @@ class RecipeService:
             raise Exception(f"Failed to create recipe: {str(e)}")
 
     async def get_recipe(
-        self, recipe_id: int, user_id: Optional[str] = None
-    ) -> Optional[Recipe]:
+        self, recipe_id: int, user_id: str | None = None
+    ) -> Recipe | None:
         """Get recipe by ID"""
         try:
             query = self.supabase.schema(self.schema).table(self.table_name).select("*").eq("id", recipe_id)
@@ -51,7 +50,35 @@ class RecipeService:
             if not response.data:
                 return None
 
-            return Recipe(**response.data[0])
+            recipe_data = response.data[0]
+            
+            # Parse instructions JSON if present
+            if recipe_data.get("instructions"):
+                from ..models.recipe import RecipeInstruction
+                instructions_data = recipe_data["instructions"]
+                if isinstance(instructions_data, list):
+                    recipe_data["instructions"] = [
+                        RecipeInstruction(**instr) if isinstance(instr, dict) else instr 
+                        for instr in instructions_data
+                    ]
+            
+            # Expand foreign keys - get recipe ingredients with full ingredient and unit data
+            ingredients_response = (
+                self.supabase.schema(self.schema)
+                .table(self.ingredient_link_table)
+                .select("""
+                    *,
+                    ingredient:ingredient_id(*),
+                    unit:unit_id(*, type:type_id(*))
+                """)
+                .eq("recipe_id", recipe_id)
+                .execute()
+            )
+            
+            # Add expanded ingredients to recipe data
+            recipe_data["ingredients"] = ingredients_response.data if ingredients_response.data else []
+
+            return Recipe(**recipe_data)
         except Exception as e:
             raise Exception(f"Failed to get recipe: {str(e)}")
 
@@ -60,8 +87,8 @@ class RecipeService:
         user_id: str,
         skip: int = 0,
         limit: int = 100,
-        difficulty_level: Optional[str] = None,
-    ) -> List[Recipe]:
+        difficulty_level: str | None = None,
+    ) -> list[Recipe]:
         """Get user's recipes with optional filtering"""
         try:
             query = (
@@ -77,13 +104,41 @@ class RecipeService:
                 .execute()
             )
 
-            return [Recipe(**item) for item in response.data]
+            recipes = []
+            for recipe_data in response.data:
+                # Parse instructions JSON if present
+                if recipe_data.get("instructions"):
+                    from ..models.recipe import RecipeInstruction
+                    instructions_data = recipe_data["instructions"]
+                    if isinstance(instructions_data, list):
+                        recipe_data["instructions"] = [
+                            RecipeInstruction(**instr) if isinstance(instr, dict) else instr 
+                            for instr in instructions_data
+                        ]
+                
+                # Expand foreign keys for each recipe
+                ingredients_response = (
+                    self.supabase.schema(self.schema)
+                    .table(self.ingredient_link_table)
+                    .select("""
+                        *,
+                        ingredient:ingredient_id(*),
+                        unit:unit_id(*, type:type_id(*))
+                    """)
+                    .eq("recipe_id", recipe_data["id"])
+                    .execute()
+                )
+                
+                recipe_data["ingredients"] = ingredients_response.data if ingredients_response.data else []
+                recipes.append(Recipe(**recipe_data))
+
+            return recipes
         except Exception as e:
             raise Exception(f"Failed to get recipes: {str(e)}")
 
     async def update_recipe(
         self, recipe_id: int, recipe_data: RecipeUpdate, user_id: str
-    ) -> Optional[Recipe]:
+    ) -> Recipe | None:
         """Update a recipe (only if owned by user)"""
         try:
             data = recipe_data.model_dump(exclude_none=True)
@@ -120,8 +175,8 @@ class RecipeService:
             raise Exception(f"Failed to delete recipe: {str(e)}")
 
     async def search_recipes(
-        self, query: str, user_id: Optional[str] = None, limit: int = 10
-    ) -> List[Recipe]:
+        self, query: str, user_id: str | None = None, limit: int = 10
+    ) -> list[Recipe]:
         """Search recipes by title"""
         try:
             supabase_query = (
@@ -135,7 +190,35 @@ class RecipeService:
 
             response = supabase_query.limit(limit).execute()
 
-            return [Recipe(**item) for item in response.data]
+            recipes = []
+            for recipe_data in response.data:
+                # Parse instructions JSON if present
+                if recipe_data.get("instructions"):
+                    from ..models.recipe import RecipeInstruction
+                    instructions_data = recipe_data["instructions"]
+                    if isinstance(instructions_data, list):
+                        recipe_data["instructions"] = [
+                            RecipeInstruction(**instr) if isinstance(instr, dict) else instr 
+                            for instr in instructions_data
+                        ]
+                
+                # Expand foreign keys for each recipe
+                ingredients_response = (
+                    self.supabase.schema(self.schema)
+                    .table(self.ingredient_link_table)
+                    .select("""
+                        *,
+                        ingredient:ingredient_id(*),
+                        unit:unit_id(*, type:type_id(*))
+                    """)
+                    .eq("recipe_id", recipe_data["id"])
+                    .execute()
+                )
+                
+                recipe_data["ingredients"] = ingredients_response.data if ingredients_response.data else []
+                recipes.append(Recipe(**recipe_data))
+
+            return recipes
         except Exception as e:
             raise Exception(f"Failed to search recipes: {str(e)}")
 
@@ -143,9 +226,33 @@ class RecipeService:
     async def add_ingredient_to_recipe(
         self, link_data: RecipeIngredientLinkCreate
     ) -> RecipeIngredientLink:
-        """Add ingredient to recipe"""
+        """Add ingredient to recipe - handles both ID and object inputs"""
         try:
-            data = link_data.model_dump(exclude_none=True)
+            # Handle ingredient: use object if provided, otherwise use ingredient_id
+            ingredient_id = link_data.ingredient_id
+            if link_data.ingredient:
+                ingredient = await ingredient_service._upsert_ingredient(link_data.ingredient)
+                ingredient_id = ingredient.id
+            elif not ingredient_id:
+                raise Exception("Either ingredient_id or ingredient object must be provided")
+            
+            # Handle unit: use object if provided, otherwise use unit_id
+            unit_id = link_data.unit_id
+            if link_data.unit:
+                unit_id = await ingredient_service._upsert_unit(link_data.unit)
+            
+            # Create the link data with resolved IDs
+            data = {
+                "recipe_id": link_data.recipe_id,
+                "ingredient_id": ingredient_id,
+                "quantity": link_data.quantity,
+                "unit_id": unit_id,
+                "preparation": link_data.preparation,
+                "notes": link_data.notes
+            }
+            
+            # Remove None values
+            data = {k: v for k, v in data.items() if v is not None}
 
             response = (
                 self.supabase.schema(self.schema).table(self.ingredient_link_table).insert(data).execute()
@@ -158,37 +265,9 @@ class RecipeService:
         except Exception as e:
             raise Exception(f"Failed to add ingredient to recipe: {str(e)}")
 
-    async def add_ingredient_to_recipe_with_objects(
-        self, link_data: RecipeIngredientLinkCreateWithObjects
-    ) -> RecipeIngredientLink:
-        """Add ingredient to recipe with full ingredient and unit objects"""
-        try:
-            # Upsert ingredient
-            ingredient = await ingredient_service.create_ingredient_with_unit(link_data.ingredient)
-            
-            # Upsert unit if provided
-            unit_id = None
-            if link_data.unit:
-                unit = await ingredient_service._upsert_unit(link_data.unit)
-                unit_id = unit
-            
-            # Create the recipe ingredient link
-            link_create_data = RecipeIngredientLinkCreate(
-                recipe_id=link_data.recipe_id,
-                ingredient_id=ingredient.id,
-                quantity=link_data.quantity,
-                unit_id=unit_id,
-                preparation=link_data.preparation,
-                notes=link_data.notes
-            )
-            
-            return await self.add_ingredient_to_recipe(link_create_data)
-        except Exception as e:
-            raise Exception(f"Failed to add ingredient to recipe with objects: {str(e)}")
-
     async def get_recipe_ingredients(
         self, recipe_id: int
-    ) -> List[RecipeIngredientLink]:
+    ) -> list[RecipeIngredientLink]:
         """Get all ingredients for a recipe"""
         try:
             response = (
@@ -204,7 +283,7 @@ class RecipeService:
 
     async def update_recipe_ingredient(
         self, link_id: int, link_data: RecipeIngredientLinkUpdate
-    ) -> Optional[RecipeIngredientLink]:
+    ) -> RecipeIngredientLink | None:
         """Update recipe ingredient link"""
         try:
             data = link_data.model_dump(exclude_none=True)

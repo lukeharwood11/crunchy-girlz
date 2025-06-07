@@ -1,8 +1,8 @@
 from typing import List, Optional
 from supabase import Client
 from ..settings.database import get_supabase_client
-from ..models.ingredient import Ingredient, IngredientCreate, IngredientUpdate, IngredientCreateWithUnit
-from ..models.unit_of_measure import UnitOfMeasure, UnitOfMeasureCreate, UnitOfMeasureCreateWithType, UnitOfMeasureType, UnitOfMeasureTypeCreate
+from ..models.ingredient import Ingredient, IngredientCreate, IngredientUpdate
+from ..models.unit_of_measure import UnitOfMeasure, UnitOfMeasureCreate, UnitOfMeasureType, UnitOfMeasureTypeCreate
 
 
 class IngredientService:
@@ -45,16 +45,16 @@ class IngredientService:
         except Exception as e:
             raise Exception(f"Failed to upsert unit type: {str(e)}")
 
-    async def _upsert_unit(self, unit_data: UnitOfMeasureCreate | UnitOfMeasureCreateWithType | UnitOfMeasure) -> int:
+    async def _upsert_unit(self, unit_data: UnitOfMeasureCreate | UnitOfMeasure) -> int:
         """Upsert a unit and return its ID"""
         try:
             if isinstance(unit_data, UnitOfMeasure):
                 return unit_data.id
             
             type_id = None
-            if isinstance(unit_data, UnitOfMeasureCreateWithType) and unit_data.type:
+            if unit_data.type:
                 type_id = await self._upsert_unit_type(unit_data.type)
-            elif hasattr(unit_data, 'type_id') and unit_data.type_id:
+            elif unit_data.type_id:
                 type_id = unit_data.type_id
             
             # Check if unit already exists by name and type
@@ -92,43 +92,48 @@ class IngredientService:
         except Exception as e:
             raise Exception(f"Failed to upsert unit: {str(e)}")
 
-    async def create_ingredient_with_unit(self, ingredient_data: IngredientCreateWithUnit) -> Ingredient:
-        """Create a new ingredient with optional unit upsert"""
+    async def _upsert_ingredient(self, ingredient_data: IngredientCreate | Ingredient) -> Ingredient:
+        """Upsert an ingredient and return the full ingredient object"""
         try:
-            unit_id = None
-            if ingredient_data.unit:
-                unit_id = await self._upsert_unit(ingredient_data.unit)
+            if isinstance(ingredient_data, Ingredient):
+                return ingredient_data
             
-            # Create ingredient
+            # Check if ingredient already exists by name and category
+            query = (
+                self.supabase.schema(self.schema).table(self.table_name)
+                .select("*")
+                .eq("name", ingredient_data.name)
+            )
+            
+            if ingredient_data.category:
+                query = query.eq("category", ingredient_data.category)
+            else:
+                query = query.is_("category", "null")
+            
+            existing = query.execute()
+            
+            if existing.data:
+                return Ingredient(**existing.data[0])
+            
+            # Create new ingredient if it doesn't exist
+            return await self.create_ingredient(ingredient_data)
+        except Exception as e:
+            raise Exception(f"Failed to upsert ingredient: {str(e)}")
+
+    async def create_ingredient(self, ingredient_data: IngredientCreate) -> Ingredient:
+        """Create a new ingredient with validation and upsert functionality"""
+        try:
             data = {
                 "name": ingredient_data.name,
                 "category": ingredient_data.category,
-                "unit_id": unit_id
             }
-            
             response = self.supabase.schema(self.schema).table(self.table_name).insert(data).execute()
-
-            if not response.data:
-                raise Exception("Failed to create ingredient")
-
-            return Ingredient(**response.data[0])
-        except Exception as e:
-            raise Exception(f"Failed to create ingredient with unit: {str(e)}")
-
-    async def create_ingredient(self, ingredient_data: IngredientCreate) -> Ingredient:
-        """Create a new ingredient"""
-        try:
-            data = ingredient_data.model_dump(exclude_none=True)
-
-            response = self.supabase.schema(self.schema).table(self.table_name).insert(data).execute()
-
             if not response.data:
                 raise Exception("Failed to create ingredient")
 
             return Ingredient(**response.data[0])
         except Exception as e:
             raise Exception(f"Failed to create ingredient: {str(e)}")
-            raise e
 
     async def get_ingredient(self, ingredient_id: int) -> Optional[Ingredient]:
         """Get ingredient by ID"""

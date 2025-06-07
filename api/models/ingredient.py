@@ -1,30 +1,37 @@
 from datetime import datetime
-from typing import Optional
 from pydantic import BaseModel
-from .unit_of_measure import UnitOfMeasure, UnitOfMeasureCreate
 
 
 class IngredientBase(BaseModel):
     name: str
     category: str | None = None
-    unit_id: int | None = None
 
 
-class IngredientCreate(IngredientBase): ...
-
-
-class IngredientCreateWithUnit(BaseModel):
+class IngredientCreate(IngredientBase):
     name: str
     category: str | None = None
-    unit: Optional[UnitOfMeasureCreate | UnitOfMeasure] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Chicken Breast",
+                "category": "Protein"
+            }
+        }
 
 
 class IngredientUpdate(BaseModel):
     name: str | None = None
     category: str | None = None
-    unit_id: int | None = None
     name_embedding: list[float] | None = None
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Organic Chicken Breast",
+                "category": "Organic Protein"
+            }
+        }
 
 class Ingredient(IngredientBase):
     id: int
@@ -34,3 +41,12 @@ class Ingredient(IngredientBase):
 
     class Config:
         from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Chicken Breast",
+                "category": "Protein",
+                "created_at": "2024-01-15T10:30:00",
+                "updated_at": "2024-01-15T10:30:00"
+            }
+        }
